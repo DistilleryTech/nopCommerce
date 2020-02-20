@@ -1,3 +1,5 @@
+SET GLOBAL log_bin_trust_function_creators = 1;
+
 DELIMITER $$
 CREATE FUNCTION `Check_Exists_FullText_Index`(
 	`TableName` 	varchar(200),
@@ -37,18 +39,18 @@ BEGIN
 	with recursive CategoryTree AS
 	(
 	  SELECT id, cast(concat(LPAD(DisplayOrder, @lengthOrder, '0'), '-' , LPAD(Id, @lengthId, '0'))  as char(500)) as `Order`
-		FROM category
+		FROM Category
 		WHERE ParentCategoryId = 0
 	  UNION ALL
 	  SELECT c.id, concat(sc.`Order`, '|', LPAD(c.DisplayOrder, @lengthOrder, '0'), '-' , LPAD(c.Id, @lengthId, '0')) as `Order`
 		FROM CategoryTree AS sc 
-		  JOIN category AS c ON sc.id = c.ParentCategoryId
+		  JOIN Category AS c ON sc.id = c.ParentCategoryId
 	)
     select *
     from CategoryTree;
     
 	select c.`Id`, c.`Name`, ct.`Order` 
-		from category c
+		from Category c
 			inner join `OrderedCategories` as ct on c.Id = ct.Id
 		#filter results
 		where not c.Deleted
@@ -57,12 +59,12 @@ BEGIN
             and (ShowHidden OR COALESCE(`CustomerRoleIds`, '') = '' OR not c.SubjectToAcl
 				OR EXISTS (
 					select 1 
-                    from aclRecord as acl 
+                    from AclRecord as acl 
                     where find_in_set(acl.CustomerRoleId, CustomerRoleIds) 
 						and acl.`EntityId` = c.`Id` AND acl.`EntityName` = 'Category')
 			)
             and (not StoreId OR not c.`LimitedToStores`
-				OR EXISTS (SELECT 1 FROM storemapping sm
+				OR EXISTS (SELECT 1 FROM StoreMapping sm
 					WHERE sm.`EntityId` = c.`Id` AND sm.`EntityName` = 'Category' AND sm.`StoreId` = StoreId
 				)
 			)
@@ -245,7 +247,7 @@ BEGIN
 		AND (length(`AllowedCustomerRoleIds`) = 0 or (not p.SubjectToAcl 
 			OR EXISTS (
 					select 1 
-                    from aclRecord as acl 
+                    from AclRecord as acl 
                     where find_in_set(acl.CustomerRoleId, `AllowedCustomerRoleIds`) 
 						and acl.`EntityId` = p.`Id` AND acl.`EntityName` = 'Product')
 			))
