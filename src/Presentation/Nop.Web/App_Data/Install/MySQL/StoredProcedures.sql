@@ -1,10 +1,9 @@
-SET GLOBAL log_bin_trust_function_creators = 1;
-
 DELIMITER $$
 CREATE FUNCTION `Check_Exists_FullText_Index`(
 	`TableName` 	varchar(200),
 	`IndexName` 	varchar(200)
 ) RETURNS tinyint(1)
+READS SQL DATA 
 sql security invoker
 BEGIN
 
@@ -25,6 +24,7 @@ CREATE PROCEDURE `CategoryLoadAllPaged`(
 	`PageSize`				int,
     OUT `TotalRecords`		int
 )
+READS SQL DATA 
 sql security invoker
 BEGIN
 	Set @lengthId = (select CHAR_LENGTH(MAX(Id)) FROM Category);
@@ -85,6 +85,7 @@ CREATE PROCEDURE `Create_FullText_Index`(
 		`IndexName` 	varchar(200),
     out `Result` 		bool
 )
+MODIFIES SQL DATA 
 sql security invoker
 BEGIN
 	set `Result` = true;
@@ -108,6 +109,7 @@ CREATE PROCEDURE `DeleteGuests`(
 	CreatedToUtc datetime,
 	out TotalRecordsDeleted int
 )
+MODIFIES SQL DATA 
 sql security invoker
 BEGIN
 	create temporary table tmp_guests (CustomerId int);
@@ -179,6 +181,7 @@ CREATE PROCEDURE `Drop_FullText_Index`(
 		`IndexName` 	varchar(200),
     out `Result` 		bool
 )
+MODIFIES SQL DATA 
 sql security invoker
 BEGIN
 	set `Result` = true;
@@ -197,6 +200,7 @@ DELIMITER ;
 
 DELIMITER $$
 CREATE PROCEDURE `FullText_Disable`()
+MODIFIES SQL DATA 
 sql security invoker
 BEGIN
     call `Drop_FullText_Index`('Product', 'FT_IX_Product_Description', @drop_result);
@@ -208,6 +212,7 @@ DELIMITER ;
 
 DELIMITER $$
 CREATE PROCEDURE `FullText_Enable`()
+MODIFIES SQL DATA 
 sql security invoker
 BEGIN
 	CALL `Create_FullText_Index`('Product', 'ShortDescription, FullDescription', 'FT_IX_Product_Description',  @result);
@@ -219,6 +224,7 @@ DELIMITER ;
 
 DELIMITER $$
 CREATE PROCEDURE `FullText_IsSupported`()
+DETERMINISTIC 
 sql security invoker
 BEGIN
 	select true;
@@ -230,6 +236,7 @@ CREATE PROCEDURE `ProductTagCountLoadAll`(
 	`StoreId` 					int,
 	`AllowedCustomerRoleIds`	text	#a list of customer role IDs (comma-separated list) for which a product should be shown (if a subject to ACL)
 )
+READS SQL DATA 
 sql security invoker
 BEGIN
 	#filter by customer role IDs (access control list)	
@@ -289,6 +296,7 @@ CREATE PROCEDURE `ProductLoadAllPaged`(
 	out	`FilterableSpecificationAttributeOptionIds` 		text, 				#the specification attribute option identifiers applied to loaded products (all pages). returned as a comma separated list of identifiers
 	out	`TotalRecords`										int
 )
+    READS SQL DATA 
     SQL SECURITY INVOKER
 BEGIN
 	DECLARE `SearchKeywords` bit default false;
