@@ -90,6 +90,7 @@ namespace Nop.Services.Common
             if (attribute == null)
                 throw new ArgumentNullException(nameof(attribute));
 
+            attribute.CreatedOrUpdatedDateUTC = DateTime.UtcNow;
             _genericAttributeRepository.Insert(attribute);
             
             //event notification
@@ -105,6 +106,7 @@ namespace Nop.Services.Common
             if (attribute == null)
                 throw new ArgumentNullException(nameof(attribute));
 
+            attribute.CreatedOrUpdatedDateUTC = DateTime.UtcNow;
             _genericAttributeRepository.Update(attribute);
             
             //event notification
@@ -119,7 +121,7 @@ namespace Nop.Services.Common
         /// <returns>Get attributes</returns>
         public virtual IList<GenericAttribute> GetAttributesForEntity(int entityId, string keyGroup)
         {
-            var key = string.Format(NopCommonCachingDefaults.GenericAttributeCacheKey, entityId, keyGroup);
+            var key = NopCommonCachingDefaults.GenericAttributeCacheKey.ToCacheKey(entityId, keyGroup);
 
             var query = from ga in _genericAttributeRepository.Table
                 where ga.EntityId == entityId &&
